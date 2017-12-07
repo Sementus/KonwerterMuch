@@ -106,9 +106,12 @@ for i_muchy=1:1:liczba_much
             % Obliczanie odchylenia standardowego do udawanego dnia
             dzien_odch_LD(i_pomiary,i_muchy) = std(akt_30(i_pomiary:liczba_pom_30:(i_pomiary+liczba_pom_30*(czas_liczba_LD-1)),i_muchy));
 
+            % Obliczanie bledu standardowego do udawanego dnia
+            %dzien_blad_LD(i_pomiary,i_muchy) = (std(akt_30(i_pomiary:liczba_pom_30:(i_pomiary+liczba_pom_30*(czas_liczba_LD-1)),i_muchy)))/sqrt(liczba_much);
+
             %Kolmna swiatla dla jednego dnia
-            dzien_swiatlo_LD(i_pomiary,1) = swiatlo_30(i_pomiary,1);
-            
+            %dzien_swiatlo_LD(i_pomiary,1) = swiatlo_30(i_pomiary,1);
+            dzien_swiatlo_LD(i_pomiary,1) = swiatlo_30(i_pomiary+liczba_pom_30*(czas_liczba_LD-1),1);
     end
 end
 %% Tworzenie udawanego dnia DD dla KAZDEJ muchy
@@ -120,10 +123,13 @@ for i_muchy=1:1:liczba_much
             dzien_sr_DD(i_pomiary,i_muchy) = mean(akt_30((i_pomiary+liczba_pom_30*czas_liczba_LD):liczba_pom_30:(i_pomiary+liczba_pom_30*(czas_liczba_dni-1)),i_muchy));
             
             % Obliczanie odchylenia standardowego do udawanego dnia
-            dzien_odch_DD(i_pomiary,i_muchy) = std(akt_30(czas_liczba_DD*i_pomiary:liczba_pom_30:((czas_liczba_LD+czas_liczba_DD)*i_pomiary),i_muchy));
+            dzien_odch_DD(i_pomiary,i_muchy) = std(akt_30((i_pomiary+liczba_pom_30*czas_liczba_LD):liczba_pom_30:(i_pomiary+liczba_pom_30*(czas_liczba_dni-1)),i_muchy));
+
+            % Obliczanie bledu standardowego do udawanego dnia
+            %dzien_blad_DD(i_pomiary,i_muchy) = (std(akt_30((i_pomiary+liczba_pom_30*czas_liczba_LD):liczba_pom_30:(i_pomiary+liczba_pom_30*(czas_liczba_dni-1)),i_muchy)))/sqrt(liczba_much);
 
             %Kolmna swiatla dla jednego dnia
-            dzien_swiatlo_DD(i_pomiary,1) = swiatlo_30(i_pomiary,1);
+            dzien_swiatlo_DD(i_pomiary,1) = swiatlo_30(i_pomiary+liczba_pom_30*(czas_liczba_dni-1),1);
             
     end
 end
@@ -137,8 +143,12 @@ for i_pomiary=1:1:liczba_pom_30
     dzien_all_sr_DD(i_pomiary,1) = mean(dzien_sr_DD(i_pomiary,1:1:liczba_much));
             
     % Obliczanie odchylenia standardowego do udawanego dnia
-    dzien_all_odch_LD(i_pomiary,1) = mean(dzien_odch_LD(i_pomiary,1:1:liczba_much));
-    dzien_all_odch_DD(i_pomiary,1) = mean(dzien_odch_DD(i_pomiary,1:1:liczba_much));
+    dzien_all_odch_LD(i_pomiary,1) = std(dzien_sr_LD(i_pomiary,1:1:liczba_much));
+    dzien_all_odch_DD(i_pomiary,1) = std(dzien_sr_DD(i_pomiary,1:1:liczba_much));
+    
+    % Obliczanie bledu standardowego do udawanego dnia
+    dzien_all_blad_LD(i_pomiary,1) = std(dzien_sr_LD(i_pomiary,1:1:liczba_much))/sqrt(liczba_much);
+    dzien_all_blad_DD(i_pomiary,1) = std(dzien_sr_DD(i_pomiary,1:1:liczba_much))/sqrt(liczba_much);
 
 end
 
@@ -148,6 +158,8 @@ subplot(2,1,1);
 hold on;
 
 for i_godzina=1:1:liczba_pom_30
+
+    plot([i_godzina i_godzina], [0 dzien_all_sr_LD(i_godzina,1)+dzien_all_blad_LD(i_godzina,1)], 'black', 'LineWidth', 2);
     
     if dzien_swiatlo_LD(i_godzina,1) == 1    	%warunek na znacznik fazy (L or D)
 
@@ -160,23 +172,39 @@ for i_godzina=1:1:liczba_pom_30
     end							%koniec instrukcji if
 end	
 
-hold off;
-
 title('Aktywnosc much przez jeden dzien LD');
-legend('Aktywnosc', 1);
 ylabel('Aktywnosc');
 xlabel('Czas');
-set(gca, 'xtick', [1 liczba_pom_30/4+1 2*liczba_pom_30/4+1 3*liczba_pom_30/4+1 liczba_pom_30-1], 'xticklabel', {'2:00:00', '8:00:00', '14:00:00', '20:00:00', '1:00:00'})
+set(gca, 'xtick', [1 liczba_pom_30/4+1 2*liczba_pom_30/4+1 3*liczba_pom_30/4+1 liczba_pom_30-1], 'xticklabel', {'ZT18', 'ZT0', 'ZT6', 'ZT12', 'ZT18'});
 xlim([0 liczba_pom_30+1]);
+
+hold off;
 
 %% wykres DD
 
 subplot(2,1,2);
-bar(dzien_all_sr_DD, 'black');           %czarny slupek
+
+hold on;
+
+for i_godzina=1:1:liczba_pom_30
+
+    plot([i_godzina i_godzina], [0 dzien_all_sr_DD(i_godzina,1)+dzien_all_blad_DD(i_godzina,1)], 'black', 'LineWidth', 2);
+    
+    if dzien_swiatlo_DD(i_godzina,1) == 1    	%warunek na znacznik fazy (L or D)
+
+        bar(i_godzina, dzien_all_sr_DD(i_godzina,1), 'white');         	%bialy slupek
+
+    elseif dzien_swiatlo_DD(i_godzina,1) == 0    %warunek na znacznik nie rowna sie 1 (czyli 0)
+
+        bar(i_godzina, dzien_all_sr_DD(i_godzina,1), 'black');           %czarny slupek
+
+    end							%koniec instrukcji if
+end	
 
 title('Aktywnosc much przez jeden dzien DD');
-legend('Aktywnosc', 1);
 ylabel('Aktywnosc');
 xlabel('Czas');
-set(gca, 'xtick', [1 liczba_pom_30/4+1 2*liczba_pom_30/4+1 3*liczba_pom_30/4+1 liczba_pom_30-1], 'xticklabel', {'2:00:00', '8:00:00', '14:00:00', '20:00:00', '1:00:00'})
+set(gca, 'xtick', [1 liczba_pom_30/4+1 2*liczba_pom_30/4+1 3*liczba_pom_30/4+1 liczba_pom_30-1], 'xticklabel', {'ZT18', 'ZT0', 'ZT6', 'ZT12', 'ZT18'});
 xlim([0 liczba_pom_30+1]);
+
+hold off;
